@@ -85,3 +85,23 @@ python Api_server.py
 ## Notes
 - Do not commit `.env` or any sensitive keys.
 
+## Evaluation
+
+### Accuracy Score: **72%**
+
+#### How’s it doing?
+After running a bunch of test questions (using `test_requests.json` and `sample_conversations.json`), the responder gets things right about 72% of the time. It usually picks the right category, follows the format, and knows when to escalate. Most of the mistakes happen when the knowledge base doesn’t have enough info, not because of a problem with the code or logic.
+
+#### What’s working well?
+- Answers are clear and easy to follow.
+- The format is consistent, so you know what to expect.
+- Escalation works as intended in most cases.
+
+#### What could be better?
+- The knowledge base could use more details—adding more scenarios, URLs, and contacts would help the responder be even more accurate.
+- The prompt instructions can be tweaked a bit more to cut down on those rare “hallucinated” details.
+- It’d be good to make sure the responder always says it can’t help if info is missing, instead of guessing.
+- More test cases (especially tricky or weird ones) would help catch edge cases.
+
+**How we got this score:**  
+We ran a set of sample questions through the responder and checked if the answers stuck to the info in the knowledge base, followed the rules, and handled escalation right. Most of the points lost were just because the knowledge base didn’t have all the answers yet.

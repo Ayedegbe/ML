@@ -11,7 +11,7 @@ def generate_response(
     model: str = "gpt-4o-mini"  # or any GPT‑4/3.5 model you have access to
 ) -> str:
     # Join up to 10 context documents for the LLM prompt
-    context_text = "\n\n".join(context_documents[:10])
+    context_text = "\n\n".join(context_documents[:20])
 
     # Load categories and descriptions for better LLM guidance
     import json
@@ -33,7 +33,7 @@ def generate_response(
 
     # Prompt instructs the LLM to answer only from context and follow help-desk rules
     system_prompt = f"""
-                You are TechCorp’s IT Help‑Desk Assistant.
+                You are an IT Help‑Desk Assistant.
 
                 <CONTEXT>
                 {context_text}
