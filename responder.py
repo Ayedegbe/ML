@@ -21,9 +21,13 @@ def generate_response(
         categories_data = json.loads(categories_path.read_text(encoding="utf-8"))
         categories = categories_data.get("categories", {})
         categories_list = "\n".join([
-            f"- {cat}: {details['description']}" for cat, details in categories.items()
+            f"- {cat}: {details['description']}\n  Escalation triggers: {', '.join(details.get('escalation_triggers', []))}" for cat, details in categories.items()
         ])
-        categories_section = f"Available categories (use the best match):\n{categories_list}"
+        categories_section = (
+            "Available categories (use the best match):\n" +
+            categories_list +
+            "\n\nEscalate ONLY if the user's issue matches a listed escalation trigger for the chosen category."
+        )
     else:
         categories_section = ""
 
@@ -38,18 +42,19 @@ def generate_response(
                 {categories_section}
 
                 Rules
-                1. Use **only** the information inside <CONTEXT> . If the answer isn't there, apologise and suggest escalation.
+                1. Use **only** the information inside <CONTEXT>. If the answer isn't there, apologise and suggest escalation.
                 2. Identify the best‑fit issue category from the list above.
                 3. Provide a concise, friendly answer:
-                    • Numbered or bulleted steps when possible  
-                    • Mention the escalation trigger and contact if escalation is needed
-                4. Format exactly like:
+                    • Numbered or bulleted steps when possible
+                    • Mention the escalation trigger and contact ONLY if escalation is required.
+                4. Escalate ONLY if the user's issue matches a listed escalation trigger for the chosen category.
+                5. Format exactly like:
                 Category: <category>
 
                 Response:
                 <answer>
 
-                Escalation Required: <Yes/No> """
+                Escalation Required: <Yes/No> (Only say Yes if the user's issue matches an escalation trigger for the selected category.)"""
     # Call OpenAI LLM with system and user prompt
     response = client.chat.completions.create(
         model=model,
