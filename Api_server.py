@@ -66,7 +66,9 @@ async def chat(req: ChatRequest, request: Request):
 def run_test_scenarios():
     import json
     from pathlib import Path
-    test_file = Path("test_requests.json")
+    import os
+    base_dir = Path(__file__).parent
+    test_file = base_dir / "test_requests.json"
     if not test_file.exists():
         return {"error": "test_requests.json not found"}
     data = json.loads(test_file.read_text(encoding="utf-8"))

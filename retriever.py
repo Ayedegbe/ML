@@ -54,6 +54,9 @@ def read_frontmatter_md(path):
             "id"      : f"{path.stem}_v1",
             "title"   : title,
             "category": "unspecified",
+import os
+from pathlib import Path
+base_dir = Path(__file__).parent
             "tags"    : [],
             "updated" : datetime.utcnow().date().isoformat()
         }
@@ -165,19 +168,20 @@ def load_troubleshooting(path: str) -> list[dict]:
 docs = []  # List to hold all loaded documents
 
 # 2‑A  Markdown sources that already contain YAML front‑matter
-for p in [r"C:\Users\danie\Downloads\AI_ML\knowledge\company_it_policies.md", r"C:\Users\danie\Downloads\AI_ML\knowledge\knowledge_base.md"]:
-    fm = read_frontmatter_md(Path(p))
+base_dir = Path(__file__).parent
+for p in [base_dir / "knowledge" / "company_it_policies.md", base_dir / "knowledge" / "knowledge_base.md"]:
+    fm = read_frontmatter_md(p)
     docs.append({
         "id"     : fm["meta"]["id"],
         "meta"   : fm["meta"],
         "body"   : fm["body"],
-        "source" : p
+        "source" : str(p)
     })
 
 # 2‑B  JSON sources
-docs += load_installation_guides(r"C:\Users\danie\Downloads\AI_ML\knowledge\installation_guides.json")
-docs += load_categories(r"C:\Users\danie\Downloads\AI_ML\knowledge\categories.json")
-docs += load_troubleshooting(r"C:\Users\danie\Downloads\AI_ML\knowledge\troubleshooting_database.json")
+docs += load_installation_guides(base_dir / "knowledge" / "installation_guides.json")
+docs += load_categories(base_dir / "knowledge" / "categories.json")
+docs += load_troubleshooting(base_dir / "knowledge" / "troubleshooting_database.json")
 
 # Remove any fields whose value is not a primitive type
 def sanitize_meta(meta: dict) -> dict:
