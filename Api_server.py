@@ -9,6 +9,7 @@ import uvicorn
 # Main entry point: Run the API server
 import webbrowser
 import threading  
+import re
 
 
 # Initialize FastAPI app
@@ -45,7 +46,11 @@ async def chat(req: ChatRequest, request: Request):
     # Get format query param (default to 'text')
     format_type = request.query_params.get('format', 'text')
     if format_type == 'html':
-        answer_out = answer_text.replace('\n', '<br>')
+      
+        # Replace double newlines with paragraph breaks
+        answer_out = re.sub(r'\n\n+', '<br><br>', answer_text)
+        # Replace single newlines with line breaks
+        answer_out = re.sub(r'(?<!<br>)\n', '<br>', answer_out)
     else:
         answer_out = answer_text
 

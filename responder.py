@@ -12,6 +12,21 @@ def generate_response(
 ) -> str:
     # Join up to 10 context documents for the LLM prompt
     context_text = "\n\n".join(context_documents[:10])
+
+    # Load categories and descriptions for better LLM guidance
+    import json
+    from pathlib import Path
+    categories_path = Path("knowledge/categories.json")
+    if categories_path.exists():
+        categories_data = json.loads(categories_path.read_text(encoding="utf-8"))
+        categories = categories_data.get("categories", {})
+        categories_list = "\n".join([
+            f"- {cat}: {details['description']}" for cat, details in categories.items()
+        ])
+        categories_section = f"Available categories (use the best match):\n{categories_list}"
+    else:
+        categories_section = ""
+
     # Prompt instructs the LLM to answer only from context and follow help-desk rules
     system_prompt = f"""
                 You are TechCorp’s IT Help‑Desk Assistant.
@@ -20,9 +35,11 @@ def generate_response(
                 {context_text}
                 </CONTEXT>
 
+                {categories_section}
+
                 Rules
-                1. Use **only** the information inside <CONTEXT>. If the answer isn't there, apologise and suggest escalation.
-                2. Identify the best‑fit issue category (password_reset, wifi_connection, etc.).
+                1. Use **only** the information inside <CONTEXT> . If the answer isn't there, apologise and suggest escalation.
+                2. Identify the best‑fit issue category from the list above.
                 3. Provide a concise, friendly answer:
                     • Numbered or bulleted steps when possible  
                     • Mention the escalation trigger and contact if escalation is needed
