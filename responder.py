@@ -21,12 +21,12 @@ def generate_response(
         categories_data = json.loads(categories_path.read_text(encoding="utf-8"))
         categories = categories_data.get("categories", {})
         categories_list = "\n".join([
-            f"- {cat}: {details['description']}\n  Escalation triggers: {', '.join(details.get('escalation_triggers', []))}" for cat, details in categories.items()
+            f"- {cat}: {details['description']}\n  Key elements: {', '.join(details.get('key_elements', []))}\n  Escalation triggers: {', '.join(details.get('escalation_triggers', []))}" for cat, details in categories.items()
         ])
         categories_section = (
             "Available categories (use the best match):\n" +
             categories_list +
-            "\n\nEscalate ONLY if the user's issue matches a listed escalation trigger for the chosen category."
+            "\n\nFor the selected category, your answer must address all key elements listed.\nEscalate ONLY if the user's issue matches a listed escalation trigger for the chosen category."
         )
     else:
         categories_section = ""
@@ -42,19 +42,27 @@ def generate_response(
                 {categories_section}
 
                 Rules
-                1. Use **only** the information inside <CONTEXT>. If the answer isn't there, apologise and suggest escalation.
-                2. Identify the best‑fit issue category from the list above.
-                3. Provide a concise, friendly answer:
-                    • Numbered or bulleted steps when possible
+                1. You MUST use only the information provided inside <CONTEXT>. Do NOT use any outside knowledge, general IT advice, or steps not found in the context.
+                2. If the answer is not present in the context, apologize and suggest escalation.
+                3. If the context contains a website, email address, or procedure, you MUST use it exactly as written. Do NOT invent or substitute URLs, emails, or steps.
+                4. If the context contains a specific procedure or step, follow it exactly.
+                5. Quote or paraphrase directly from the context whenever possible, but you may rephrase for clarity and user-friendliness.
+                6. Do NOT invent, generalize, or add any steps or advice not found verbatim in the context.
+                7. Identify the best-fit issue category from the list above.
+                8. Your answer must mention or address all key elements for the selected category.
+                9. Provide a clear, complete, and friendly answer:
+                    • Use numbered or bulleted steps when possible
+                    • Use full sentences and natural language, not just keywords
                     • Mention the escalation trigger and contact ONLY if escalation is required.
-                4. Escalate ONLY if the user's issue matches a listed escalation trigger for the chosen category.
-                5. Format exactly like:
+                10. Escalate ONLY if the user's issue matches a listed escalation trigger for the chosen category.
+                11. Format your output exactly like this:
                 Category: <category>
 
                 Response:
                 <answer>
 
-                Escalation Required: <Yes/No> (Only say Yes if the user's issue matches an escalation trigger for the selected category.)"""
+                Escalation Required: <Yes/No> (Only say Yes if the user's issue matches an escalation trigger for the selected category.)
+                """
     # Call OpenAI LLM with system and user prompt
     response = client.chat.completions.create(
         model=model,

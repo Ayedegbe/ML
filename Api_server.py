@@ -19,7 +19,7 @@ app = FastAPI(title="TechCorp Help‑Desk API")
 # Request model for /chat endpoint
 class ChatRequest(BaseModel):
     question: str  # User's helpdesk question
-    top_k: int = 5  # Number of top results to retrieve (optional)
+    top_k: int = 10  # Number of top results to retrieve (optional)
 
 
 # Response model for /chat endpoint
