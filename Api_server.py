@@ -5,7 +5,10 @@ from pydantic import BaseModel
 # Import core logic modules
 from query import query_helpdesk
 from responder import generate_response
-import uvicorn  
+import uvicorn
+# Main entry point: Run the API server
+import webbrowser
+import threading  
 
 
 # Initialize FastAPI app
@@ -73,16 +76,19 @@ def run_test_scenarios():
         # Use same logic as /chat endpoint
         chunks = [doc for doc, _meta in query_helpdesk(api_req.question, top_k=api_req.top_k)]
         answer = generate_response(api_req.question, chunks)
+        # Only include the question and relevant expected/answer fields
         results.append({
-            "question": question,
-            "expected_classification": expected,
-            "expected_elements": elements,
-            "escalate": escalate,
+            "question": question, 
             "answer": answer
         })
     return {"test_results": results}
 
 
-# Main entry point: Run the API server
+
+
+# Main entry point: Run the API server and open browser
 if __name__ == "__main__":
+    def open_browser():
+        webbrowser.open_new("http://localhost:8000/docs")
+    threading.Timer(1.5, open_browser).start()
     uvicorn.run("Api_server:app", host="0.0.0.0", port=8000, reload=True)
