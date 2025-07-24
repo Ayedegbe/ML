@@ -1,16 +1,18 @@
 import os
-from openai import OpenAI
-from dotenv import load_dotenv
-load_dotenv()                               # pick up OPENAI_API_KEY if you use .env
-api_key = os.getenv("OPENAI_API_KEY")
-client = OpenAI(api_key=api_key)
+from openai import OpenAI  # OpenAI API client
+from dotenv import load_dotenv  # For loading .env variables
+load_dotenv()  # Load environment variables from .env
+api_key = os.getenv("OPENAI_API_KEY")  # Get OpenAI API key
+client = OpenAI(api_key=api_key)  # Initialize OpenAI client
 
 def generate_response(
     user_input: str,
     context_documents: list[str],
-    model: str = "gpt-4o-mini"              # or any GPT‑4/3.5 model you have access to
+    model: str = "gpt-4o-mini"  # or any GPT‑4/3.5 model you have access to
 ) -> str:
-    context_text  = "\n\n".join(context_documents[:10])   # keep prompt short
+    # Join up to 10 context documents for the LLM prompt
+    context_text = "\n\n".join(context_documents[:10])
+    # Prompt instructs the LLM to answer only from context and follow help-desk rules
     system_prompt = f"""
                 You are TechCorp’s IT Help‑Desk Assistant.
 
@@ -31,7 +33,7 @@ def generate_response(
                 <answer>
 
                 Escalation Required: <Yes/No> """
-
+    # Call OpenAI LLM with system and user prompt
     response = client.chat.completions.create(
         model=model,
         messages=[
@@ -40,6 +42,7 @@ def generate_response(
         ],
         temperature=0.2
     )
+    # Return the generated answer
     return response.choices[0].message.content
 
 
