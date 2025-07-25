@@ -81,6 +81,9 @@ python Api_server.py
 - `knowledge/` — Markdown/JSON knowledge base
 - `.env` — API keys (not tracked)
 - `.gitignore` — Excludes cache, data, secrets
+## Error Handling
+
+Right now, the API does basic error handling—if you send a bad request or something’s missing, you’ll usually get a clear error message back. If the knowledge base is missing info or the model can’t answer, the responder tries to let you know instead of guessing. There’s room to make this even better, like catching more edge cases and making sure all errors are handled gracefully, but the basics are covered for now.
 
 ## Notes
 - Do not commit `.env` or any sensitive keys.
