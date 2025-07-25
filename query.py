@@ -24,16 +24,20 @@ def query_helpdesk(user_input: str, top_k: int = TOP_K_DEFAULT, category: str | 
     """
     # Build filter for category if provided
     where = {"category": {"$eq": category}} if category else None
-
+    try:
     # Query the vector store
-    results = collection.query(
-        query_texts=[user_input],
-        n_results=top_k,
-        where=where  # None means no filter
-    )
+        results = collection.query(
+            query_texts=[user_input],
+            n_results=top_k,
+            where=where  # None means no filter
+        )
 
-    # Extract document chunks and metadata
-    docs  = results["documents"][0]   # list[str]
-    metas = results["metadatas"][0]   # list[dict]
-    return list(zip(docs, metas))
+        # Extract document chunks and metadata
+        docs  = results["documents"][0]   # list[str]
+        metas = results["metadatas"][0]   # list[dict]
+        return list(zip(docs, metas))
 
+    except Exception as e:
+        # Log or handle errors gracefully
+        print(f"Error querying helpdesk knowledge base: {e}")
+        return []

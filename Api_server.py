@@ -70,25 +70,33 @@ def run_test_scenarios():
     base_dir = Path(__file__).parent
     test_file = base_dir / "test_requests.json"
     if not test_file.exists():
-        return {"error": "test_requests.json not found"}
-    data = json.loads(test_file.read_text(encoding="utf-8"))
-    test_requests = data.get("test_requests", [])
-    results = []
-    for req in test_requests:
-        question = req["request"]
-        expected = req.get("expected_classification")
-        elements = req.get("expected_elements")
-        escalate = req.get("escalate")
-        api_req = ChatRequest(question=question, top_k=5)
-        # Use same logic as /chat endpoint
-        chunks = [doc for doc, _meta in query_helpdesk(api_req.question, top_k=api_req.top_k)]
-        answer = generate_response(api_req.question, chunks)
-        # Only include the question and relevant expected/answer fields
-        results.append({
-            "question": question, 
-            "answer": answer
-        })
-    return {"test_results": results}
+        raise HTTPException(status_code=404, detail="test_requests.json not found")
+        # return {"error": "test_requests.json not found"}
+    try:
+        data = json.loads(test_file.read_text(encoding="utf-8"))
+        test_requests = data.get("test_requests", [])
+        results = []
+        for req in test_requests:
+            question = req["request"]
+            expected = req.get("expected_classification")
+            elements = req.get("expected_elements")
+            escalate = req.get("escalate")
+            api_req = ChatRequest(question=question, top_k=5)
+            # Use same logic as /chat endpoint
+            try:
+                chunks = [doc for doc, _meta in query_helpdesk(api_req.question, top_k=api_req.top_k)]
+                answer = generate_response(api_req.question, chunks)
+            # Only include the question and relevant expected/answer fields
+            except Exception as e:
+                    answer = f"Error generating answer: {e}"
+            results.append({
+                "question": question, 
+                "answer": answer
+            })
+        return {"test_results": results}
+    except json.JSONDecodeError:
+        raise HTTPException(status_code=400, detail="Invalid JSON format in test_requests.json")
+            # return {"error": "Invalid JSON format in test_requests.json"}
 
 
 

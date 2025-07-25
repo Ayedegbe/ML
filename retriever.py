@@ -41,124 +41,153 @@ def chunk_body(body: str, max_tokens: int = CHUNK_TOKENS) -> list[str]:
 
 # Read markdown file and extract YAML frontmatter and body
 def read_frontmatter_md(path):
-    text = path.read_text(encoding="utf-8")
-    if text.lstrip().startswith("---"):
-        m = re.match(r"^---\s*\n(.*?)\n---\s*\n(.*)$", text, re.S)
-        meta = yaml.safe_load(m.group(1))
-        body = m.group(2).strip()
-    else:
-        # If there is no header, use defaults
-        h1 = re.search(r"^#\s+(.*)", text, re.M)
-        title = h1.group(1).strip() if h1 else path.stem
-        meta = {
-            "id"      : f"{path.stem}_v1",
-            "title"   : title,
-            "category": "unspecified",
-            "tags"    : [],
-            "updated" : datetime.utcnow().date().isoformat()
-        }
-        body = text.strip()
-    return {"meta": meta, "body": body}
+    try: 
+        text = path.read_text(encoding="utf-8")
+        if text.lstrip().startswith("---"):
+            m = re.match(r"^---\s*\n(.*?)\n---\s*\n(.*)$", text, re.S)
+            meta = yaml.safe_load(m.group(1))
+            body = m.group(2).strip()
+        else:
+            # If there is no header, use defaults
+            h1 = re.search(r"^#\s+(.*)", text, re.M)
+            title = h1.group(1).strip() if h1 else path.stem
+            meta = {
+                "id"      : f"{path.stem}_v1",
+                "title"   : title,
+                "category": "unspecified",
+                "tags"    : [],
+                "updated" : datetime.utcnow().date().isoformat()
+            }
+            body = text.strip()
+        return {"meta": meta, "body": body}
+    except Exception as e:
+        print(f"Error reading markdown frontmatter from {path}: {e}")
+        return {"meta": {}, "body": ""}
 
 # Load all markdown files in a folder as documents
 def load_md_dir(folder):
+    
     docs = []
     for p in Path(folder).glob("*.md"):
-        fm = read_frontmatter_md(p)
-        docs.append({
-            "id"      : fm["meta"]["id"],
-            "meta"    : fm["meta"],
-            "body"    : fm["body"],
-            "source"  : str(p)
-        })
+        try:
+            fm = read_frontmatter_md(p)
+            docs.append({
+                "id"      : fm["meta"]["id"],
+                "meta"    : fm["meta"],
+                "body"    : fm["body"],
+                "source"  : str(p)
+            })
+        except Exception as e:
+                print(f"Error loading markdown file {p}: {e}")
+
     return docs
 
     # ...existing code...
 # Load installation guides from JSON
 def load_installation_guides(path):
-    data = json.loads(Path(path).read_text(encoding="utf-8"))["software_guides"]
+    try:
+        data = json.loads(Path(path).read_text(encoding="utf-8"))["software_guides"]
+    except Exception as e:
+        print(f"Error loading installation guides from {path}: {e}")
+        return []
     docs = []
     for app, info in data.items():
-        doc_id = info.get("id") or f"{app.lower()}_install_v1"
-        body   = (
-            f"{info['title']}\n\n"
-            f"Steps:\n" + "\n".join(f"- {s}" for s in info["steps"]) + "\n\n"
-            f"Common issues:\n" +
-            "\n".join(f"- {i['issue']}: {i['solution']}" for i in info["common_issues"]) +
-            f"\n\nSupport Contact: {info['support_contact']}"
-        )
-        docs.append({
-            "id": doc_id,
-            "meta": {
-                "title"   : info["title"],
-                "category": "installation_guide",
-                "tags"    : [app, "installation"],
-                "updated" : datetime.utcnow().date().isoformat()
-            },
-            "body"   : body,
-            "source" : path
-        })
+        try:
+            doc_id = info.get("id") or f"{app.lower()}_install_v1"
+            body   = (
+                f"{info['title']}\n\n"
+                f"Steps:\n" + "\n".join(f"- {s}" for s in info["steps"]) + "\n\n"
+                f"Common issues:\n" +
+                "\n".join(f"- {i['issue']}: {i['solution']}" for i in info["common_issues"]) +
+                f"\n\nSupport Contact: {info['support_contact']}"
+            )
+            docs.append({
+                "id": doc_id,
+                "meta": {
+                    "title"   : info["title"],
+                    "category": "installation_guide",
+                    "tags"    : [app, "installation"],
+                    "updated" : datetime.utcnow().date().isoformat()
+                },
+                "body"   : body,
+                "source" : path
+            })
+        except Exception as e:
+            print(f"Error processing installation guide for {app}: {e}")
     return docs
+    
 # C:\Users\danie\Downloads\AI_ML\knowledge\company_it_policies.md
     # ...existing code...
 # Load category definitions from JSON
 def load_categories(path):
-    cats = json.loads(Path(path).read_text(encoding="utf-8"))["categories"]
+    try:
+        cats = json.loads(Path(path).read_text(encoding="utf-8"))["categories"]
+    except Exception as e:
+        print(f"Error loading categories from {path}: {e}")
+        return []
     docs = []
     for key, meta in cats.items():
-        docs.append({
-            "id": f"{key}_category_v1",
-            "meta": {
-                "title"   : key,
-                "category": "category_definition",
-                "tags"    : ["taxonomy"],
-                "updated" : datetime.utcnow().date().isoformat(),
-                **meta     # description, typical_resolution_time, escalation_triggers
-            },
-            "body": meta["description"],
-            "source": path
-        })
+        try:
+            docs.append({
+                "id": f"{key}_category_v1",
+                "meta": {
+                    "title"   : key,
+                    "category": "category_definition",
+                    "tags"    : ["taxonomy"],
+                    "updated" : datetime.utcnow().date().isoformat(),
+                    **meta     # description, typical_resolution_time, escalation_triggers
+                },
+                "body": meta["description"],
+                "source": path
+            })
+        except Exception as e:
+            print(f"Error processing category {key}: {e}")
     return docs
 
 
     # ...existing code...
 # Load troubleshooting steps from JSON
 def load_troubleshooting(path: str) -> list[dict]:
-    data = json.loads(Path(path).read_text(encoding="utf-8"))
-
+    try:
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
+    except Exception as e:
+        print(f"Error loading troubleshooting data from {path}: {e}")
+        return []
     # Handle optional top‑level wrapper
     records = data.get("troubleshooting_steps", data)
 
     docs = []
     for key, rec in records.items():
-        title = key.replace("_", " ").title()           # "password_reset" -> "Password Reset"
-        category            = rec.get("category", "General")
-        steps               = rec.get("steps", [])
-        escalation_trigger  = rec.get("escalation_trigger", "")
-        escalation_contact  = rec.get("escalation_contact", "N/A")
+        try:
+            title = key.replace("_", " ").title()           # "password_reset" -> "Password Reset"
+            category            = rec.get("category", "General")
+            steps               = rec.get("steps", [])
+            escalation_trigger  = rec.get("escalation_trigger", "")
+            escalation_contact  = rec.get("escalation_contact", "N/A")
 
-        body = (
-            f"Issue Key: {key}\n"
-            f"Category: {category}\n"
-            f"Escalation Trigger: {escalation_trigger}\n\n"
-            "Resolution Steps:\n" +
-            "\n".join(f"- {s}" for s in steps) +
-            f"\n\nEscalation Contact: {escalation_contact}"
-        )
+            body = (
+                f"Issue Key: {key}\n"
+                f"Category: {category}\n"
+                f"Escalation Trigger: {escalation_trigger}\n\n"
+                "Resolution Steps:\n" +
+                "\n".join(f"- {s}" for s in steps) +
+                f"\n\nEscalation Contact: {escalation_contact}"
+            )
 
-        doc_id = f"{key}_troubleshoot_v1"
-        docs.append({
-            "id": doc_id,
-            "meta": {
-                "title"   : title,
-                "category": "troubleshooting",
-                "tags"    : [category],
-                "updated" : datetime.utcnow().date().isoformat()
-            },
-            "body"   : body,
-            "source" : path
-        })
-
+            doc_id = f"{key}_troubleshoot_v1"
+            docs.append({
+                "id": doc_id,
+                "meta": {
+                    "title"   : title,
+                    "category": "troubleshooting",
+                    "tags"    : [category],
+                    "updated" : datetime.utcnow().date().isoformat()
+                },
+                "body"   : body,
+                "source" : path
+            })
+        except Exception as e:
+            print(f"Error processing troubleshooting record {key}: {e}")
     return docs
 
 
@@ -187,40 +216,44 @@ def sanitize_meta(meta: dict) -> dict:
 
 # Build the vector store: chunk docs, embed, and upsert into ChromaDB
 def build_vector():
-    chunks, texts, metadatas, ids = [], [], [], []
-    for doc in docs:
-        for i, chunk_text in enumerate(chunk_body(doc["body"])):
-            chunk_id = f"{doc['id']}#{i}"
-            meta_raw = {**doc["meta"], "parent_id": doc["id"], "source": doc["source"]}
-            meta = sanitize_meta(meta_raw)
-            chunks.append({"id": chunk_id, "text": chunk_text, "meta": meta})
-            ids.append(chunk_id)
-            texts.append(chunk_text)
-            metadatas.append(meta)
+    try:
+        chunks, texts, metadatas, ids = [], [], [], []
+        for doc in docs:
+            for i, chunk_text in enumerate(chunk_body(doc["body"])):
+                chunk_id = f"{doc['id']}#{i}"
+                meta_raw = {**doc["meta"], "parent_id": doc["id"], "source": doc["source"]}
+                meta = sanitize_meta(meta_raw)
+                chunks.append({"id": chunk_id, "text": chunk_text, "meta": meta})
+                ids.append(chunk_id)
+                texts.append(chunk_text)
+                metadatas.append(meta)
 
-    print(f"Loaded {len(docs)} docs → {len(chunks)} chunks")
+        print(f"Loaded {len(docs)} docs → {len(chunks)} chunks")
 
-    # Embed all text chunks
-    model = SentenceTransformer("all-MiniLM-L6-v2")
-    embeddings = model.encode(texts, batch_size=64, show_progress_bar=True)
+        # Embed all text chunks
+        model = SentenceTransformer("all-MiniLM-L6-v2")
+        embeddings = model.encode(texts, batch_size=64, show_progress_bar=True)
 
-    DB_DIR = "chroma_store"                     
+        DB_DIR = "chroma_store"                     
 
-    # Connect to ChromaDB and upsert embeddings
-    chroma_client = chromadb.PersistentClient(
-        path=DB_DIR,                          
-        settings=Settings(anonymized_telemetry=False) 
-    )
-    collection = chroma_client.get_or_create_collection(name="helpdesk_knowledge")
+        # Connect to ChromaDB and upsert embeddings
+        chroma_client = chromadb.PersistentClient(
+            path=DB_DIR,                          
+            settings=Settings(anonymized_telemetry=False) 
+        )
+        collection = chroma_client.get_or_create_collection(name="helpdesk_knowledge")
 
-    collection.upsert(
-        ids=ids,
-        documents=texts,
-        embeddings=embeddings,
-        metadatas=metadatas
-    )
-    return model, collection
+        collection.upsert(
+            ids=ids,
+            documents=texts,
+            embeddings=embeddings,
+            metadatas=metadatas
+        )
 
+        return model, collection
+    except Exception as e:
+        print(f"Error building vector store: {e}")
+        return None, None      
 
 # Print status after upserting embeddings
 print("✅ Embeddings upserted & collection persisted.")
